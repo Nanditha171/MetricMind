@@ -1,0 +1,68 @@
+cubes:
+  - name: Sales
+    sql: SELECT * FROM fct_sales
+
+    measures:
+      - name: revenue
+        title: "Revenue"
+        type: sum
+        sql: revenue
+
+      - name: cost
+        title: "Total Cost"
+        type: sum
+        sql: cost
+
+      - name: margin
+        title: "Margin"
+        type: sum
+        sql: revenue - cost
+
+      - name: margin_pct
+        title: "Margin Percentage"
+        type: number
+        sql: "CASE WHEN {CUBE.revenue} > 0 THEN ({CUBE.margin} / {CUBE.revenue}) * 100 ELSE 0 END"
+
+      - name: quantity
+        title: "Quantity"
+        type: sum
+        sql: quantity
+
+      - name: shipping_cost
+        title: "Shipping Cost"
+        type: sum
+        sql: shipping_cost
+
+      - name: material_cost
+        title: "Material Cost"
+        type: sum
+        sql: material_cost
+
+    dimensions:
+      - name: quarter
+        sql: quarter
+        type: string
+
+      - name: month
+        sql: month
+        type: string
+
+      - name: year
+        sql: year
+        type: number
+
+      - name: region
+        sql: region
+        type: string
+
+      - name: country
+        sql: country
+        type: string
+
+      - name: product
+        sql: product
+        type: string
+
+      - name: category
+        sql: category
+        type: string
