@@ -10,7 +10,6 @@
   },
   "dependencies": {
     "@babel/runtime": "^8.0.0",
-    "@next/swc-win32-x64-msvc": "^16.3.1",
     "clsx": "^2.1.0",
     "echarts": "^5.5.0",
     "echarts-for-react": "^3.0.2",
