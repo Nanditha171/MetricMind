@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import MetricsCatalog from '@/components/MetricsCatalog';
-import ChatInterface from '@/components/ChatInterface';
+import MetricsCatalog from '../components/MetricsCatalog';
+import ChatInterface from '../components/ChatInterface';
 
 export default function WorkspacePage() {
   const [selectedPrompt, setSelectedPrompt] = useState<string | undefined>(undefined);

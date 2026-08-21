@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Database, Table, Calculator, ChevronRight, Sparkles } from 'lucide-react';
-import { fetchMetricsCatalog, MetricsCatalogResponse } from '@/lib/api';
+import { fetchMetricsCatalog, MetricsCatalogResponse } from '../lib/api';
 
 interface MetricsCatalogProps {
   onSelectQuery?: (sampleQuery: string) => void;

@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Send, Bot, User, Sparkles, AlertTriangle, CheckCircle2, ChevronRight, RefreshCw, BarChart2, Shield } from 'lucide-react';
-import { ChatResponse, sendChatMessage } from '@/lib/api';
+import { ChatResponse, sendChatMessage } from '../lib/api';
 import DynamicChart from './DynamicChart';
 import TransparencyPanel from './TransparencyPanel';
 

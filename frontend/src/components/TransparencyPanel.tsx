@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { Code2, Database, ShieldCheck, FileSpreadsheet, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
-import { ChatResponse } from '@/lib/api';
+import { ChatResponse } from '../lib/api';
 
 interface TransparencyPanelProps {
   transparency: ChatResponse['transparency'];
