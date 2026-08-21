@@ -2,7 +2,7 @@
  * MetricMind API Client for FastAPI backend.
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api';
 
 export interface ChatResponse {
   query: string;
