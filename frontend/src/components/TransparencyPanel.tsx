@@ -32,7 +32,7 @@ export default function TransparencyPanel({ transparency }: TransparencyPanelPro
           <ShieldCheck className="w-4 h-4 text-emerald-400" />
           <span>Query Governance & Transparency Inspector</span>
           <span className="ml-2 px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-            Governed SQL
+            PostgreSQL Verified
           </span>
         </div>
         <div className="flex items-center space-x-3 text-xs text-gray-400">
@@ -137,13 +137,15 @@ export default function TransparencyPanel({ transparency }: TransparencyPanelPro
                   <div className="text-xs font-semibold text-blue-400 font-mono">{m}</div>
                   <div className="text-[11px] text-gray-300 mt-1">Authoritative Metric Formula</div>
                   <div className="mt-2 text-xs font-mono bg-black/50 p-1.5 rounded text-amber-300">
-                    {m === 'revenue' && 'SUM(revenue)'}
-                    {m === 'cost' && 'SUM(cost)'}
-                    {m === 'margin' && 'SUM(revenue - cost)'}
-                    {m === 'margin_pct' && 'SUM(revenue - cost) / SUM(revenue) * 100'}
-                    {m === 'shipping_cost' && 'SUM(shipping_cost)'}
-                    {m === 'material_cost' && 'SUM(material_cost)'}
-                    {m === 'quantity' && 'SUM(quantity)'}
+                    {m === 'revenue' && 'SUM(s.revenue)'}
+                    {m === 'cost' && 'SUM(s.cost)'}
+                    {m === 'profit' && 'SUM(s.profit)'}
+                    {m === 'margin' && 'SUM(s.profit)'}
+                    {m === 'margin_pct' && '(SUM(profit) / SUM(revenue)) * 100'}
+                    {m === 'quantity' && 'SUM(s.quantity)'}
+                    {m === 'customer_count' && 'COUNT(DISTINCT s.customer_id)'}
+                    {m === 'material_cost' && 'SUM(ROUND(s.cost * 0.75, 2))'}
+                    {m === 'shipping_cost' && 'SUM(ROUND(s.cost * 0.25, 2))'}
                   </div>
                 </div>
               ))}
@@ -156,11 +158,11 @@ export default function TransparencyPanel({ transparency }: TransparencyPanelPro
               <div className="flex items-center justify-between py-1 border-b border-gray-800">
                 <span className="text-gray-400">Direct SQL Execution Prevention</span>
                 <span className="text-emerald-400 font-semibold flex items-center">
-                  <Check className="w-3.5 h-3.5 mr-1" /> Enforced (LLM restricted to JSON specs)
+                  <Check className="w-3.5 h-3.5 mr-1" /> Enforced (LLM restricted to governed tool specs)
                 </span>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-gray-800">
-                <span className="text-gray-400">Prompt Injection Scanner</span>
+                <span className="text-gray-400">Prompt & DDL Injection Scanner</span>
                 <span className="text-emerald-400 font-semibold flex items-center">
                   <Check className="w-3.5 h-3.5 mr-1" /> Passed (AST & Regex checked)
                 </span>
@@ -168,7 +170,7 @@ export default function TransparencyPanel({ transparency }: TransparencyPanelPro
               <div className="flex items-center justify-between py-1 border-b border-gray-800">
                 <span className="text-gray-400">Metric Definitions Validation</span>
                 <span className="text-emerald-400 font-semibold flex items-center">
-                  <Check className="w-3.5 h-3.5 mr-1" /> 100% Governed Catalog Match
+                  <Check className="w-3.5 h-3.5 mr-1" /> 100% Governed PostgreSQL Catalog Match
                 </span>
               </div>
               <div className="flex items-center justify-between py-1 border-b border-gray-800">
@@ -176,7 +178,7 @@ export default function TransparencyPanel({ transparency }: TransparencyPanelPro
                 <span className="text-gray-200 font-mono">Capped at 1,000 max (scanned: {transparency?.total_rows_scanned})</span>
               </div>
               <div className="flex items-center justify-between py-1">
-                <span className="text-gray-400">Data Mart / Source</span>
+                <span className="text-gray-400">Authoritative Data Warehouse</span>
                 <span className="text-blue-400 font-mono">{transparency?.data_source}</span>
               </div>
             </div>

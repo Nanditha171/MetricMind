@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { Database, Table, Calculator, ChevronRight, Sparkles } from 'lucide-react';
+import { Database, Calculator, ChevronRight, Sparkles } from 'lucide-react';
 import { fetchMetricsCatalog, MetricsCatalogResponse } from '../lib/api';
 
 interface MetricsCatalogProps {
@@ -25,7 +25,7 @@ export default function MetricsCatalog({ onSelectQuery }: MetricsCatalogProps) {
         <Database className="w-5 h-5 text-blue-400" />
         <div>
           <h2 className="font-semibold text-sm text-gray-100">Governed Semantic Layer</h2>
-          <p className="text-[11px] text-gray-400">Metric & Dimension Dictionary</p>
+          <p className="text-[11px] text-gray-400">PostgreSQL Metric & Dimension Catalog</p>
         </div>
       </div>
 

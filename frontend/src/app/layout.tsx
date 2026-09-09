@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'MetricMind — Agentic Semantic BI Engine',
-  description: 'Enterprise natural language business intelligence with governed semantic metrics and multi-step reasoning.',
+  title: 'MetricMind — Enterprise AI-Powered Semantic BI Platform',
+  description: 'Enterprise natural language business intelligence with governed semantic metrics, root-cause analysis, and multi-step reasoning.',
 }
 
 export default function RootLayout({
@@ -12,8 +12,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className="dark">
-      <body className="bg-dark-base text-gray-100 antialiased selection:bg-blue-600 selection:text-white">
+    <html lang="en">
+      <body className="bg-surface-canvas text-surface-textMain antialiased selection:bg-brand-500 selection:text-white">
         {children}
       </body>
     </html>

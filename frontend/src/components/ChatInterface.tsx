@@ -22,7 +22,7 @@ export default function ChatInterface({ externalPrompt, onClearPrompt }: ChatInt
     {
       id: 'welcome',
       role: 'assistant',
-      content: "Hello! I am **MetricMind**, your Agentic Semantic BI Engine. Ask any natural language question to explore governed business metrics, compare regional performance, or run multi-step root-cause analysis."
+      content: "Hello! I am **MetricMind**, your Conversational BI Agent. Ask any natural language question to explore governed metrics, compare regional performance, or run multi-step root-cause analysis backed by PostgreSQL."
     }
   ]);
 
@@ -92,17 +92,17 @@ export default function ChatInterface({ externalPrompt, onClearPrompt }: ChatInt
             <h1 className="font-semibold text-sm text-gray-100 flex items-center space-x-2">
               <span>MetricMind BI Workspace</span>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-mono">
-                Governed Semantic Engine
+                PostgreSQL + Cube.dev + LangChain + Gemini
               </span>
             </h1>
-            <p className="text-[11px] text-gray-400">Next.js • LangChain Agent • dbt Mart • Snowflake</p>
+            <p className="text-[11px] text-gray-400">Next.js • LangChain Agent • dbt Mart • PostgreSQL (50k sales)</p>
           </div>
         </div>
 
         {/* Governance Status Pill */}
         <div className="hidden md:flex items-center space-x-2 bg-gray-950 px-3 py-1.5 rounded-full border border-gray-800 text-xs text-gray-300">
           <Shield className="w-4 h-4 text-emerald-400" />
-          <span>LLM SQL Injection Safe</span>
+          <span>LLM Injection Protected</span>
         </div>
       </header>
 
@@ -128,7 +128,7 @@ export default function ChatInterface({ externalPrompt, onClearPrompt }: ChatInt
                 </span>
                 {msg.responseObject && (
                   <span className="text-[10px] text-emerald-400 font-mono flex items-center">
-                    <CheckCircle2 className="w-3 h-3 mr-1" /> Verified Governed Answer
+                    <CheckCircle2 className="w-3 h-3 mr-1" /> PostgreSQL Governed Result
                   </span>
                 )}
               </div>
@@ -162,7 +162,7 @@ export default function ChatInterface({ externalPrompt, onClearPrompt }: ChatInt
                           <div className="text-blue-400 font-semibold">Step {step.step}: {step.action}</div>
                           {step.thought && <div className="text-gray-300 italic">Thought: {step.thought}</div>}
                           {step.generated_sql && (
-                            <div className="text-emerald-300 bg-black/60 p-2 rounded text-[11px]">
+                            <div className="text-emerald-300 bg-black/60 p-2 rounded text-[11px] whitespace-pre-wrap">
                               {step.generated_sql}
                             </div>
                           )}
@@ -174,11 +174,9 @@ export default function ChatInterface({ externalPrompt, onClearPrompt }: ChatInt
                 </div>
               )}
 
-              {/* Main Markdown Content */}
-              <div className="prose prose-invert prose-sm max-w-none space-y-2 leading-relaxed">
-                {msg.content.split('\n').map((line, lIdx) => (
-                  <p key={lIdx}>{line}</p>
-                ))}
+              {/* Main Content */}
+              <div className="prose prose-invert prose-sm max-w-none space-y-2 leading-relaxed whitespace-pre-wrap">
+                {msg.content}
               </div>
 
               {/* ECharts Visualization */}
@@ -204,7 +202,7 @@ export default function ChatInterface({ externalPrompt, onClearPrompt }: ChatInt
             </div>
             <div className="bg-dark-card border border-dark-border p-4 rounded-2xl text-xs text-gray-300 flex items-center space-x-3">
               <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
-              <span>Analyzing intent, executing governed semantic queries, and checking cost drivers...</span>
+              <span>Analyzing intent via Gemini, orchestrating LangChain tools, and querying PostgreSQL...</span>
             </div>
           </div>
         )}
@@ -213,25 +211,39 @@ export default function ChatInterface({ externalPrompt, onClearPrompt }: ChatInt
       {/* Sample Quick Action Pills */}
       <div className="px-6 py-2 border-t border-gray-800 bg-gray-950 flex flex-wrap gap-2">
         <button
+          onClick={() => handleSend("How much revenue did we make in Europe?")}
+          className="text-xs bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-800 px-3 py-1.5 rounded-full transition-colors flex items-center space-x-1.5"
+        >
+          <BarChart2 className="w-3.5 h-3.5 text-blue-400" />
+          <span>Europe Revenue</span>
+        </button>
+        <button
+          onClick={() => handleSend("Show revenue by region.")}
+          className="text-xs bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-800 px-3 py-1.5 rounded-full transition-colors flex items-center space-x-1.5"
+        >
+          <BarChart2 className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Revenue by Region</span>
+        </button>
+        <button
+          onClick={() => handleSend("Which product generated the highest revenue?")}
+          className="text-xs bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-800 px-3 py-1.5 rounded-full transition-colors flex items-center space-x-1.5"
+        >
+          <BarChart2 className="w-3.5 h-3.5 text-amber-400" />
+          <span>Top Product Revenue</span>
+        </button>
+        <button
+          onClick={() => handleSend("What is our profit and margin?")}
+          className="text-xs bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-800 px-3 py-1.5 rounded-full transition-colors flex items-center space-x-1.5"
+        >
+          <BarChart2 className="w-3.5 h-3.5 text-purple-400" />
+          <span>Profit & Margin</span>
+        </button>
+        <button
           onClick={() => handleSend("Why did our European margins drop last quarter?")}
           className="text-xs bg-blue-900/30 hover:bg-blue-800/40 text-blue-300 border border-blue-500/30 px-3 py-1.5 rounded-full transition-colors flex items-center space-x-1.5"
         >
           <Sparkles className="w-3.5 h-3.5 text-blue-400" />
-          <span>Why did European margins drop last quarter? (Multi-Step Demo)</span>
-        </button>
-        <button
-          onClick={() => handleSend("Compare revenue and margin across regions")}
-          className="text-xs bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-800 px-3 py-1.5 rounded-full transition-colors flex items-center space-x-1.5"
-        >
-          <BarChart2 className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Compare Regional Performance</span>
-        </button>
-        <button
-          onClick={() => handleSend("Show revenue and margin by product line")}
-          className="text-xs bg-gray-900 hover:bg-gray-800 text-gray-300 border border-gray-800 px-3 py-1.5 rounded-full transition-colors flex items-center space-x-1.5"
-        >
-          <BarChart2 className="w-3.5 h-3.5 text-amber-400" />
-          <span>Product Profitability</span>
+          <span>Multi-Step Root Cause Analysis</span>
         </button>
       </div>
 
@@ -242,7 +254,7 @@ export default function ChatInterface({ externalPrompt, onClearPrompt }: ChatInt
             type="text"
             value={inputPrompt}
             onChange={(e) => setInputPrompt(e.target.value)}
-            placeholder="Ask any natural language business question (e.g. 'Why did European margins drop last quarter?')..."
+            placeholder="Ask any natural language business question (e.g. 'How much revenue did we make in Europe?')..."
             className="flex-1 bg-gray-950 border border-gray-800 rounded-xl px-4 py-3 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
           />
           <button

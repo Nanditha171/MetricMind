@@ -1,106 +1,85 @@
-# MetricMind — API Documentation
+# MetricMind — API Reference
 
-The MetricMind backend provides RESTful API endpoints for conversational BI, direct semantic queries, catalog discovery, and health checking.
-
-## Base URL
-`http://localhost:8000/api`
+FastAPI backend endpoints available at `http://localhost:8000`.
 
 ---
 
-### 1. Conversational BI Endpoint
-**`POST /api/chat`**
+## 1. Primary Conversational BI Endpoint
 
-Executes a natural language business query via the LangChain multi-step agent.
+### `POST /api/chat`
+Accepts natural-language business questions and returns governed analytical results, reasoning trace steps, and ECharts visualization configs.
 
-#### Request Body
+**Request**:
 ```json
 {
-  "prompt": "Why did our European margins drop last quarter?"
+  "prompt": "How much revenue did we make in Europe?"
 }
 ```
 
-#### Response (200 OK)
+**Response**:
 ```json
 {
-  "query": "Why did our European margins drop last quarter?",
+  "query": "How much revenue did we make in Europe?",
   "status": "success",
-  "explanation": "### Analytical Summary: European Margin Decline Analysis...",
-  "chart_config": {
-    "title": { "text": "European Quarter-over-Quarter Financial Breakdown ($)" },
-    "series": [...]
-  },
+  "answer": "$9,809,305.67",
+  "metric": "revenue",
+  "explanation": "### Governed Analytics: Revenue (Filters: region = 'Europe')\n\n- **Revenue**: **$9,809,305.67** `(Formula: SUM(f.revenue))`",
+  "chart_config": null,
   "reasoning_steps": [
     {
       "step": 1,
-      "action": "Intent Recognition & Plan Formulation",
-      "thought": "User requested root-cause analysis for European margin decline..."
+      "action": "LangChain + Gemini Intent Parsing & Tool Resolution",
+      "thought": "Parsed measures=['revenue'], dimensions=[], filters=[{'dimension': 'region', 'operator': '=', 'value': 'Europe'}]"
+    },
+    {
+      "step": 2,
+      "action": "Invoke Governed Tool: execute_governed_query",
+      "generated_sql": "SELECT SUM(f.revenue) AS revenue FROM fct_sales f ...",
+      "row_count": 1
     }
   ],
   "transparency": {
-    "api_calls": [
-      {
-        "step": 1,
-        "request": { "measures": ["revenue", "margin_pct"], "dimensions": ["quarter"] },
-        "sql": "SELECT quarter AS quarter, CASE WHEN SUM(revenue) > 0..."
-      }
-    ],
-    "governed_metrics_used": ["revenue", "cost", "material_cost", "shipping_cost", "margin", "margin_pct"],
-    "data_source": "fct_sales (dbt Mart / Governed Semantic Layer)",
-    "total_rows_scanned": 10,
-    "execution_time_ms": 14.5
+    "api_calls": [...],
+    "governed_metrics_used": ["revenue"],
+    "data_source": "Cube.dev / PostgreSQL (fct_sales)",
+    "total_rows_scanned": 1,
+    "execution_time_ms": 12.4
   }
 }
 ```
 
 ---
 
-### 2. Direct Governed Semantic Query Endpoint
-**`POST /api/semantic/query`**
+## 2. Compatibility PoC Endpoint
 
-Executes a structured semantic query against the Governed Semantic Layer.
-
-#### Request Body
+### `POST /api/ask`
+**Request**:
 ```json
 {
-  "measures": ["revenue", "margin_pct"],
-  "dimensions": ["quarter", "region"],
-  "filters": [
-    { "dimension": "region", "operator": "=", "value": "Europe" }
-  ],
-  "limit": 50
-}
-```
-
-#### Response (200 OK)
-```json
-{
-  "status": "success",
-  "measures": ["revenue", "margin_pct"],
-  "dimensions": ["quarter", "region"],
-  "generated_sql": "SELECT quarter AS quarter, region AS region, SUM(revenue) AS revenue...",
-  "data": [...],
-  "row_count": 5,
-  "execution_time_ms": 6.2,
-  "governance_passed": true,
-  "error_message": null
+  "question": "What is our profit?"
 }
 ```
 
 ---
 
-### 3. Metric Catalog Endpoint
-**`GET /api/semantic/metrics`**
+## 3. Direct Semantic Layer Query
 
-Returns authoritative definitions of all governed measures and dimensions.
+### `POST /api/semantic/query`
+**Request**:
+```json
+{
+  "measures": ["revenue", "profit", "margin_pct"],
+  "dimensions": ["region"],
+  "filters": [],
+  "limit": 10
+}
+```
 
 ---
 
-### 4. Health Check Endpoint
-**`GET /api/health`**
-```json
-{
-  "status": "healthy",
-  "service": "MetricMind Governed BI Engine",
-  "semantic_layer": "active"
-}
-```
+## 4. Metadata Endpoints
+
+- `GET /api/health`: Database connection status.
+- `GET /api/metrics` / `GET /api/semantic/metrics`: Catalog of measures and dimensions.
+- `GET /api/dataset`: Summary statistics of sales records, regions, products, and categories.
+- `GET /api/query?metric=revenue&region=Europe`: Direct parameter-based query.

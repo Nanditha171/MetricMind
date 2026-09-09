@@ -5,7 +5,7 @@ models:
     description: "Governed Fact Table for Corporate Sales, Costs, and Margin Analytics"
     columns:
       - name: order_id
-        description: "Primary key for orders"
+        description: "Primary identifier for the transaction"
         tests:
           - unique
           - not_null
@@ -14,27 +14,28 @@ models:
       - name: cost
         description: "Authoritative metric: SUM(cost)"
       - name: margin
-        description: "Authoritative metric: SUM(revenue - cost)"
+        description: "Authoritative metric: SUM(profit)"
       - name: margin_pct
-        description: "Authoritative metric: SUM(revenue - cost) / SUM(revenue) * 100"
+        description: "Authoritative metric: (SUM(profit) / SUM(revenue)) * 100"
       - name: material_cost
         description: "Authoritative metric: SUM(material_cost)"
       - name: shipping_cost
         description: "Authoritative metric: SUM(shipping_cost)"
 
-metrics:
-  - name: revenue
-    label: "Total Revenue"
-    model: ref('fct_sales')
-    description: "Sum of total sales revenue"
-    type: simple
-    type_params:
-      measure: revenue
+  - name: dim_products
+    description: "Authoritative Product Dimension Table"
+    columns:
+      - name: product_id
+        description: "Primary key for products"
+        tests:
+          - unique
+          - not_null
 
-  - name: margin_pct
-    label: "Margin Percentage"
-    model: ref('fct_sales')
-    description: "Net operating margin percentage"
-    type: expression
-    type_params:
-      expr: "(margin / revenue) * 100"
+  - name: dim_customers
+    description: "Authoritative Customer Dimension Table with Segment and Churn Status"
+    columns:
+      - name: customer_id
+        description: "Primary key for customers"
+        tests:
+          - unique
+          - not_null

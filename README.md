@@ -1,107 +1,174 @@
-# MetricMind — Agentic Semantic BI Engine
+# MetricMind — Governed Conversational Business Intelligence (BI)
 
-**MetricMind** is an enterprise-grade **Agentic Semantic BI Engine** that enables business users to ask complex analytical questions in natural language and receive governed, consistent, and transparent answers backed by dynamic Apache ECharts visualizations—without exposing raw database tables or allowing arbitrary SQL execution by LLMs.
-
----
-
-## Key Features
-
-1. **Governed Business Metrics**: Measures (`revenue`, `cost`, `margin`, `margin_pct`, `quantity`, `shipping_cost`, `material_cost`) have a single authoritative mathematical formula enforced at the semantic layer.
-2. **Strict Architecture Enforcement**:
-   $$\text{User} \rightarrow \text{LangChain Agent} \rightarrow \text{Semantic Layer API} \rightarrow \text{Governed Metric Query} \rightarrow \text{Data Warehouse}$$
-3. **Multi-Step Agentic Reasoning**: Built-in root-cause analytical workflows. Answers complex questions like *"Why did our European margins drop last quarter?"* by automatically running comparative queries and identifying cost spikes (e.g. shipping logistics vs raw material costs).
-4. **Query Transparency Inspector**: Interactive UI drawer displaying the exact JSON API payload, compiled governed SQL statement, metric dictionary definitions, and security status.
-5. **Dynamic ECharts Visualizations**: Dynamic rendering of line charts, bar charts, and financial breakdowns powered by Apache ECharts.
-6. **Enterprise Governance & Security**: Safeguards against prompt injection, arbitrary SQL execution, unknown metrics, and expensive queries (capped at 1,000 max rows & 5 max agent steps).
-7. **Production Tech Stack**: Next.js 14, TypeScript, Tailwind CSS, FastAPI, LangChain, dbt, Cube.dev semantic model exports, DuckDB / SQLite / Snowflake Data Warehouse.
+MetricMind is an enterprise Conversational Business Intelligence and Semantic BI platform. It allows users to ask natural-language business questions and returns governed, accurate insights with interactive **Apache ECharts** visualizations and multi-step reasoning traces.
 
 ---
 
-## Directory Structure
+## 1. Architecture Overview
 
 ```
-MetricMind/
-├── backend/
-│   ├── app/
-│   │   ├── api/routes.py          # FastAPI REST API (/api/chat, /api/semantic/query, /api/semantic/metrics)
-│   │   ├── agent/agent.py         # Multi-step reasoning agent orchestrator
-│   │   ├── agent/tools.py         # LangChain tools for semantic layer interaction
-│   │   ├── core/governance.py     # Prompt injection scanner & row/step limiters
-│   │   ├── semantic/layer.py      # Core Governed Semantic Engine (compiles JSON -> Parameterized SQL)
-│   │   ├── semantic/metadata.py   # Authoritative metric & dimension definitions
-│   │   ├── semantic/models.py     # Pydantic request/response schemas
-│   │   ├── visualization/builder.py# Apache ECharts configuration builder
-│   │   ├── database/db.py         # SQLite / DuckDB connector & Snowflake DDL exporter
-│   │   └── database/seed.py       # Realistic corporate sales & shipping data generator
-│   ├── tests/                     # Comprehensive Pytest test suite
-│   ├── main.py                    # FastAPI server entrypoint
-│   └── requirements.txt
-├── dbt_project/                   # Complete dbt transformation project
-│   ├── dbt_project.yml
-│   └── models/
-│       ├── staging/stg_orders.sql
-│       └── marts/fct_sales.sql
-├── cube/                          # Cube.dev semantic layer model definition
-│   └── model/Sales.yml
-├── frontend/                      # Next.js 14 Conversational BI UI
-│   ├── src/
-│   │   ├── app/page.tsx           # Main BI Workspace Page
-│   │   ├── components/            # ChatInterface, TransparencyPanel, DynamicChart, MetricsCatalog
-│   │   └── lib/api.ts             # API client for FastAPI backend
-├── docs/                          # Comprehensive System Documentation
-│   ├── ARCHITECTURE.md
-│   ├── METRIC_DEFINITIONS.md
-│   ├── GOVERNANCE.md
-│   ├── DATA_DICTIONARY.md
-│   ├── API.md
-│   ├── SETUP.md
-│   ├── TESTING.md
-│   └── DEMO_QUESTIONS.md
-├── .env.example
-└── README.md
+                      User (Natural Language Prompt)
+                                    │
+                                    ▼
+                      [ Next.js 14 Web Workspace ]
+                      (ECharts Visualizations + Inspector)
+                                    │
+                                    ▼ HTTP (POST /api/chat)
+                      [ FastAPI Backend Server ]
+                                    │
+                                    ▼
+                      [ LangChain + Google Gemini ]
+                      ├── 1. Prompt Safety & SQL Injection Inspection
+                      ├── 2. Intent Parsing (Measures, Dimensions, Filters)
+                      └── 3. Governed Semantic Tool Selection
+                                    │
+                                    ▼ Structured Semantic Query
+                      [ Governed Semantic Layer / Cube.dev ]
+                      ├── Authoritative METRICS_DICTIONARY
+                      ├── Authoritative DIMENSIONS_DICTIONARY
+                      └── Compiles Parameterized PostgreSQL SQL
+                                    │
+                                    ▼ Parameterized SQL Execution
+                      [ dbt Marts / PostgreSQL Database ]
+                      ├── sales (50,000 transactions)
+                      ├── customers (10,000 customers)
+                      ├── products (20 catalog products)
+                      └── customer_status (10,000 status records)
+                                    │
+                                    ▼ Structured JSON Result
+                      [ Multi-Step Synthesis & ECharts Builder ]
+                      ├── Executive Markdown Answer
+                      ├── Multi-step Reasoning Trace
+                      └── Dynamic ECharts Visual Specification
+                                    │
+                                    ▼ JSON Response
+                      [ Next.js / Web Chat Interface ]
 ```
 
 ---
 
-## Quick Start
+## 2. Technology Stack
 
-### 1. Seed & Launch Backend
+- **Relational Data Warehouse**: PostgreSQL
+- **Data Transformation & Modeling**: dbt (data build tool)
+- **Semantic Layer**: Cube.dev (`cube/model/cubes/sales.yml`) + `GovernedSemanticEngine`
+- **Orchestration & Agent**: LangChain
+- **LLM Reasoning Engine**: Google Gemini 3.6 Flash
+- **Backend API**: FastAPI / Uvicorn / Pydantic
+- **Frontend UI**: Next.js 14 / React 18 / Tailwind CSS
+- **Visualizations**: Apache ECharts (`echarts-for-react`)
+
+---
+
+## 3. Authoritative Business Metrics
+
+| Metric Key | Label | Formula | Description |
+|---|---|---|---|
+| `revenue` | Revenue | `SUM(s.revenue)` | Total gross sales revenue ($) |
+| `cost` | Total Cost | `SUM(s.cost)` | Operational & product costs ($) |
+| `profit` | Operating Profit | `SUM(s.profit)` | Net operating dollar profit ($) |
+| `margin` | Operating Margin | `SUM(s.profit)` | Net operating dollar margin ($) |
+| `margin_pct` | Margin Percentage | `(SUM(profit) / SUM(revenue)) * 100` | Net margin percentage (%) |
+| `quantity` | Quantity Sold | `SUM(s.quantity)` | Total units sold across orders |
+| `customer_count` | Customer Count | `COUNT(DISTINCT s.customer_id)` | Unique transacting customers |
+| `material_cost` | Material Cost | `SUM(ROUND(s.cost * 0.75, 2))` | Raw material component costs |
+| `shipping_cost` | Shipping Cost | `SUM(ROUND(s.cost * 0.25, 2))` | Logistics & freight shipping costs |
+
+---
+
+## 4. Getting Started & Installation
+
+### 4.1 Prerequisites
+- Python 3.10+
+- PostgreSQL 14+ running locally or in Docker
+- Node.js 18+ & npm (for Next.js frontend & Cube.dev)
+- Google Gemini API Key
+
+### 4.2 Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/prxsanna/Axlero-Project.git
+   cd Axlero-Project
+   ```
+
+2. **Configure Environment Variables**:
+   Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+   Fill in your actual credentials:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   DB_HOST=localhost
+   DB_PORT=5432
+   DB_NAME=metricmind
+   DB_USER=postgres
+   DB_PASSWORD=your_postgres_password
+   ```
+
+3. **Install Python Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+---
+
+## 5. Running the Application
+
+### 5.1 Start the FastAPI Backend
 ```bash
-# Install Python dependencies
-pip install -r backend/requirements.txt
-
-# Seed sample dataset
-python backend/app/database/seed.py
-
-# Launch FastAPI backend
-python -m uvicorn backend.main:app --reload --port 8000
+python -m uvicorn backend.main:app --host 0.0.0.0 --port 8000 --reload
 ```
+API Documentation will be available at `http://localhost:8000/docs`.
 
-### 2. Launch Next.js Frontend
+### 5.2 Start the Next.js Frontend
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
-Navigate to `http://localhost:3000` to interact with MetricMind.
+Open `http://localhost:3000` in your browser.
+
+*Note*: If you prefer a zero-dependency instant browser experience, open `http://localhost:8000/` to access the built-in standalone web interface.
+
+### 5.3 (Optional) Start Cube.dev Semantic Layer
+```bash
+cd cube
+npm install
+npm run dev
+```
+Cube Developer Playground will be available at `http://localhost:4000`.
 
 ---
 
-## Automated Verification Tests
-Run the complete backend test suite:
+## 6. Running Tests
+
+Execute the complete pytest verification suite:
 ```bash
-python -m pytest backend/tests/ -v
+pytest tests/ -v
 ```
 
 ---
 
-## Primary Demonstration Query
+## 7. Example Business Questions
 
-Ask: **"Why did our European margins drop last quarter?"**
+Try asking MetricMind:
+- **Total Revenue**: *"How much revenue did we make?"*
+- **Filtered Regional Revenue**: *"How much revenue did we make in Europe?"*
+- **Regional Breakdown with Chart**: *"Show revenue by region."*
+- **Product Leaderboard**: *"Which product generated the highest revenue?"*
+- **Profitability Analysis**: *"What is our profit and margin?"*
+- **Multi-Step Root Cause**: *"Why did our European margins drop last quarter?"*
+- **Anti-Injection Test**: *"DROP TABLE sales;"* *(Blocked by security guardrail)*
+- **Unsupported Metric Handling**: *"How much happiness did we generate?"* *(Prompts for clarification)*
 
-MetricMind will:
-1. Query European margin percentage for Q3 vs Q4 2025 (detecting the drop from 46.7% to 28.3%).
-2. Execute a secondary governed query breaking down Material Cost vs Shipping Cost.
-3. Identify that Shipping & Freight Logistics costs spiked by **+278%** ($1.18M vs $312K).
-4. Synthesize an executive summary with a supporting Apache ECharts financial graph.
-5. Provide complete query transparency in the UI inspector drawer.
+---
+
+## 8. Governance & Security
+
+MetricMind enforces strict security guardrails:
+1. **Prompt Injection & DDL Blocking**: Prohibits `DROP`, `DELETE`, `UPDATE`, `INSERT`, `TRUNCATE`, `ALTER`, `EXEC`, and semicolon chaining.
+2. **Catalog Whitelisting**: Rejects metrics and dimensions not defined in the authoritative metadata catalog.
+3. **Deterministic Parameterization**: Compiles structured semantic JSON specifications directly into parameterized SQL.
+4. **Row Count & Step Limits**: Restricts queries to safe execution budgets (max 1,000 rows, max 5 reasoning steps).
