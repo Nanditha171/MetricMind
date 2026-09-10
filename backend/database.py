@@ -36,10 +36,19 @@ _engine: Optional[Engine] = None
 _engine_type: str = "postgres"
 
 
-def ensure_sqlite_db_built():
+def ensure_sqlite_db_built(force: bool = False):
     """Ensure local SQLite database is built from MetricMind_Dummy_Data if PostgreSQL is unavailable."""
-    if os.path.exists(SQLITE_DB_PATH) and os.path.getsize(SQLITE_DB_PATH) > 100000:
-        return
+    if not force and os.path.exists(SQLITE_DB_PATH) and os.path.getsize(SQLITE_DB_PATH) > 100000:
+        try:
+            conn = sqlite3.connect(SQLITE_DB_PATH)
+            cur = conn.cursor()
+            cur.execute("PRAGMA table_info(fct_sales)")
+            cols = [r[1] for r in cur.fetchall()]
+            conn.close()
+            if "order_id" in cols and "margin_pct" in cols:
+                return
+        except Exception:
+            pass
 
     csv_dir = "MetricMind_Dummy_Data"
     if not os.path.exists(csv_dir):
@@ -116,27 +125,32 @@ def ensure_sqlite_db_built():
     cur.execute("""
     CREATE TABLE fct_sales (
         sale_id TEXT PRIMARY KEY,
+        order_id TEXT,
         sale_date TEXT,
+        order_date TEXT,
         year INTEGER,
         quarter TEXT,
         month TEXT,
         customer_id TEXT,
+        customer_name TEXT,
+        country TEXT,
+        region TEXT,
+        customer_segment TEXT,
+        acquisition_channel TEXT,
         product_id TEXT,
         product TEXT,
         category TEXT,
         tier TEXT,
-        region TEXT,
-        country TEXT,
-        customer_name TEXT,
-        customer_segment TEXT,
-        acquisition_channel TEXT,
         quantity INTEGER,
         unit_price REAL,
         discount REAL,
         revenue REAL,
         cost REAL,
         profit REAL,
-        margin REAL
+        margin REAL,
+        material_cost REAL,
+        shipping_cost REAL,
+        margin_pct REAL
     );
     """)
 
@@ -149,7 +163,7 @@ def ensure_sqlite_db_built():
                 dt = datetime.strptime(s_date, "%Y-%m-%d")
                 year = dt.year
                 q_num = (dt.month - 1) // 3 + 1
-                quarter = f"{year}-Q{q_num}"
+                quarter = f"Q{q_num} {year}"
                 month = dt.strftime("%Y-%m")
 
                 pid = row["product_id"]
@@ -158,34 +172,55 @@ def ensure_sqlite_db_built():
                 p_info = products.get(pid, {})
                 c_info = customers.get(cid, {})
 
+                rev = float(row["revenue"])
+                cost = float(row["cost"])
+                profit = float(row["profit"])
+                margin_val = float(row.get("margin", profit))
+                mat_cost = round(cost * 0.75, 2)
+                ship_cost = round(cost * 0.25, 2)
+                margin_pct = round((profit / rev) * 100.0, 2) if rev > 0 else 0.0
+
                 sales_rows.append((
                     row["sale_id"],
+                    row["sale_id"],
+                    s_date,
                     s_date,
                     year,
                     quarter,
                     month,
                     cid,
+                    c_info.get("customer_name", "Unknown Customer"),
+                    c_info.get("country", "Unknown"),
+                    row["region"],
+                    c_info.get("customer_segment", "SMB"),
+                    c_info.get("acquisition_channel", "Direct"),
                     pid,
                     p_info.get("product_name", "Unknown Product"),
                     p_info.get("category", "General"),
                     p_info.get("tier", "Standard"),
-                    row["region"],
-                    c_info.get("country", "Unknown"),
-                    c_info.get("customer_name", "Unknown Customer"),
-                    c_info.get("customer_segment", "SMB"),
-                    c_info.get("acquisition_channel", "Direct"),
                     int(row["quantity"]),
                     float(row["unit_price"]),
                     float(row["discount"]),
-                    float(row["revenue"]),
-                    float(row["cost"]),
-                    float(row["profit"]),
-                    float(row["margin"])
+                    rev,
+                    cost,
+                    profit,
+                    margin_val,
+                    mat_cost,
+                    ship_cost,
+                    margin_pct
                 ))
 
         cur.executemany("""
-        INSERT INTO fct_sales VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
+        INSERT INTO fct_sales VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);
         """, sales_rows)
+
+    # Create alias views for direct table names
+    cur.execute("DROP VIEW IF EXISTS sales;")
+    cur.execute("CREATE VIEW sales AS SELECT * FROM fct_sales;")
+    cur.execute("DROP VIEW IF EXISTS products;")
+    cur.execute("CREATE VIEW products AS SELECT * FROM dim_products;")
+    cur.execute("DROP VIEW IF EXISTS customers;")
+    cur.execute("CREATE VIEW customers AS SELECT * FROM dim_customers;")
 
     conn.commit()
     conn.close()
@@ -213,7 +248,19 @@ def get_engine() -> Engine:
     return _engine
 
 
-engine = get_engine()
+def verify_dbt_models(eng: Optional[Engine] = None) -> bool:
+    """Verify that core tables (fct_sales, dim_products, dim_customers) exist and are populated."""
+    if eng is None:
+        eng = get_engine()
+    try:
+        with eng.connect() as conn:
+            for tbl in ["fct_sales", "dim_products", "dim_customers"]:
+                res = conn.execute(text(f"SELECT COUNT(*) FROM {tbl}")).scalar()
+                if res is None or res == 0:
+                    return False
+        return True
+    except Exception:
+        return False
 
 
 def check_connection() -> Dict[str, Any]:
@@ -236,7 +283,8 @@ def check_connection() -> Dict[str, Any]:
             return {
                 "status": "connected",
                 "engine": "SQLite (Fallback Warehouse)",
-                "database": SQLITE_DB_PATH,
+                "database": DB_NAME,
+                "database_path": SQLITE_DB_PATH,
                 "dbt_models": "fct_sales (50,000 transactions), dim_products, dim_customers active"
             }
     except Exception as e:
@@ -247,13 +295,18 @@ def check_connection() -> Dict[str, Any]:
 
 
 def execute_raw_sql(sql_query: str, params: Optional[Dict[str, Any]] = None) -> Tuple[List[Dict[str, Any]], List[str]]:
+    import re
     eng = get_engine()
+    clean_sql = sql_query
+    if _engine_type == "sqlite":
+        # Remove PostgreSQL type casts like ::float, ::numeric, ::text, ::date, ::integer
+        clean_sql = re.sub(r'::[a-zA-Z0-9_]+', '', clean_sql)
     try:
         with eng.connect() as conn:
             if params:
-                result = conn.execute(text(sql_query), params)
+                result = conn.execute(text(clean_sql), params)
             else:
-                result = conn.execute(text(sql_query))
+                result = conn.execute(text(clean_sql))
 
             if result.returns_rows:
                 columns = list(result.keys())
@@ -265,4 +318,5 @@ def execute_raw_sql(sql_query: str, params: Optional[Dict[str, Any]] = None) -> 
                 return [], []
     except SQLAlchemyError as err:
         raise RuntimeError(f"Database Query Error: {str(err)}") from err
+
 

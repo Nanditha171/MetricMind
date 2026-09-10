@@ -59,6 +59,19 @@ export default function ExploreDataView() {
   const categories = data.map((d) => String(d[selectedDimension] || 'Unknown'));
   const values = data.map((d) => Math.round(Number(d[selectedMeasure]) || 0));
 
+  const isPct = selectedMeasure.includes('pct') || selectedMeasure.includes('margin_pct');
+  const isCurrency = ['revenue', 'cost', 'profit', 'margin', 'material_cost', 'shipping_cost'].includes(selectedMeasure);
+
+  const formatValueShort = (val: number) => {
+    if (isPct) return `${val.toFixed(1)}%`;
+    const prefix = isCurrency ? '$' : '';
+    const abs = Math.abs(val);
+    if (abs >= 1_000_000_000) return `${prefix}${(val / 1_000_000_000).toFixed(1)}B`;
+    if (abs >= 1_000_000) return `${prefix}${(val / 1_000_000).toFixed(1)}M`;
+    if (abs >= 1_000) return `${prefix}${(val / 1_000).toFixed(0)}K`;
+    return `${prefix}${val}`;
+  };
+
   const chartOption = {
     backgroundColor: 'transparent',
     tooltip: {
@@ -66,28 +79,75 @@ export default function ExploreDataView() {
       axisPointer: { type: 'shadow' },
       backgroundColor: '#0F172A',
       borderColor: '#334155',
-      textStyle: { color: '#F8FAFC' }
+      borderWidth: 1,
+      textStyle: { color: '#F8FAFC', fontSize: 12 },
+      formatter: (params: any[]) => {
+        const item = params[0];
+        const val = Number(item.value);
+        const formatted = isPct 
+          ? `${val.toFixed(2)}%` 
+          : (isCurrency ? `$${val.toLocaleString()}` : val.toLocaleString());
+        return `
+          <div class="font-sans">
+            <div class="text-slate-400 text-[11px] font-semibold mb-1">${item.name}</div>
+            <div class="flex items-center space-x-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-brand-500 inline-block"></span>
+              <span class="text-white font-bold">${item.seriesName}: ${formatted}</span>
+            </div>
+          </div>
+        `;
+      }
     },
-    grid: { left: '3%', right: '4%', top: '10%', bottom: '15%', containLabel: true },
+    grid: { 
+      left: '2%', 
+      right: '3%', 
+      top: '10%', 
+      bottom: categories.length > 5 ? '16%' : '10%', 
+      containLabel: true 
+    },
     xAxis: {
       type: 'category',
       data: categories,
-      axisLabel: { color: '#64748B', rotate: categories.length > 6 ? 25 : 0 }
+      axisLine: { lineStyle: { color: '#CBD5E1' } },
+      axisTick: { show: false },
+      axisLabel: { 
+        color: '#64748B', 
+        fontSize: 11,
+        fontWeight: 500,
+        interval: 0,
+        rotate: categories.some((c) => c.length > 8) || categories.length > 6 ? 25 : 0 
+      }
     },
     yAxis: {
       type: 'value',
-      axisLabel: { color: '#64748B' },
+      axisLine: { show: false },
+      splitNumber: 5,
+      axisLabel: { 
+        color: '#64748B', 
+        fontSize: 11,
+        formatter: (val: number) => formatValueShort(val)
+      },
       splitLine: { lineStyle: { color: '#F1F5F9', type: 'dashed' } }
     },
     series: [
       {
         name: selectedMeasure.replace('_', ' ').toUpperCase(),
         type: 'bar',
-        barWidth: '45%',
+        barMaxWidth: 48,
         data: values,
         itemStyle: {
-          color: '#4F46E5',
-          borderRadius: [4, 4, 0, 0]
+          color: {
+            type: 'linear',
+            x: 0,
+            y: 0,
+            x2: 0,
+            y2: 1,
+            colorStops: [
+              { offset: 0, color: '#4F46E5' },
+              { offset: 1, color: '#818CF8' }
+            ]
+          },
+          borderRadius: [6, 6, 0, 0]
         }
       }
     ]
@@ -157,16 +217,16 @@ export default function ExploreDataView() {
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
             <BarChart2 className="w-4 h-4 text-brand-600" />
-            <span>Visual Distribution ({selectedMeasure} by {selectedDimension})</span>
+            <span>Visual Distribution ({selectedMeasure.replace('_', ' ')} by {selectedDimension})</span>
           </div>
-          <span className="text-[11px] text-slate-400 font-mono">15 records returned</span>
+          <span className="text-[11px] text-slate-400 font-mono">{data.length} records returned</span>
         </div>
 
         {loading ? (
-          <LoadingSkeleton variant="chart" className="h-72" />
+          <LoadingSkeleton variant="chart" className="h-[380px]" />
         ) : (
-          <div className="h-72">
-            <DynamicChart option={chartOption} height="100%" />
+          <div className="h-[380px] w-full">
+            <DynamicChart option={chartOption} height="380px" />
           </div>
         )}
       </div>

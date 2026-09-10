@@ -338,7 +338,21 @@ async function askMetricMind() {
                 chartDom.style.display = 'block';
                 if (chartInstance) chartInstance.dispose();
                 chartInstance = echarts.init(chartDom);
-                chartInstance.setOption(data.chart_config);
+                const config = data.chart_config;
+                if (config.yAxis) {
+                    if (!config.yAxis.axisLabel) config.yAxis.axisLabel = {};
+                    config.yAxis.axisLabel.formatter = function(val) {
+                        if (Math.abs(val) >= 1000000000) return '$' + (val / 1000000000).toFixed(1) + 'B';
+                        if (Math.abs(val) >= 1000000) return '$' + (val / 1000000).toFixed(1) + 'M';
+                        if (Math.abs(val) >= 1000) return '$' + (val / 1000).toFixed(0) + 'K';
+                        return val;
+                    };
+                    config.yAxis.splitNumber = 5;
+                }
+                if (config.xAxis && !config.xAxis.axisLabel) {
+                    config.xAxis.axisLabel = { interval: 0, rotate: 20 };
+                }
+                chartInstance.setOption(config);
             }
         }
     } catch (err) {
