@@ -296,3 +296,52 @@ export async function fetchQuarterlyTrendData(
 
   return (res.data || []) as any;
 }
+
+export async function fetchMonthlyTrendData(
+  region = 'Europe',
+  quarter?: string
+): Promise<Array<{ month: string; revenue: number; cost: number; profit: number; margin_pct: number }>> {
+  const filters: FilterCondition[] = [];
+  if (region && region !== 'All' && region !== 'Global') {
+    filters.push({ dimension: 'region', operator: '=', value: region });
+  }
+  if (quarter && quarter !== 'All') {
+    filters.push({ dimension: 'quarter', operator: '=', value: quarter });
+  }
+
+  const res = await fetchSemanticQuery({
+    measures: ['revenue', 'cost', 'profit', 'margin_pct'],
+    dimensions: ['month'],
+    filters,
+    order_by: 'month',
+    order_desc: false,
+    limit: 24
+  });
+
+  return (res.data || []) as any;
+}
+
+export async function fetchCategoryBreakdown(
+  region = 'Europe',
+  quarter = '2025-Q4'
+): Promise<Array<{ category: string; cost: number; revenue: number; material_cost: number; shipping_cost: number }>> {
+  const filters: FilterCondition[] = [];
+  if (region && region !== 'All' && region !== 'Global') {
+    filters.push({ dimension: 'region', operator: '=', value: region });
+  }
+  if (quarter && quarter !== 'All') {
+    filters.push({ dimension: 'quarter', operator: '=', value: quarter });
+  }
+
+  const res = await fetchSemanticQuery({
+    measures: ['cost', 'revenue', 'material_cost', 'shipping_cost'],
+    dimensions: ['category'],
+    filters,
+    order_by: 'cost',
+    order_desc: true,
+    limit: 10
+  });
+
+  return (res.data || []) as any;
+}
+

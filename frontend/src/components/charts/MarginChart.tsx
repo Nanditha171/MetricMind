@@ -7,16 +7,33 @@ import LoadingSkeleton from '../ui/LoadingSkeleton';
 
 interface MarginChartProps {
   trendData: Array<{ quarter: string; margin_pct: number }>;
+  selectedQuarter?: string;
   loading?: boolean;
 }
 
-export default function MarginChart({ trendData, loading = false }: MarginChartProps) {
+export default function MarginChart({
+  trendData,
+  selectedQuarter,
+  loading = false
+}: MarginChartProps) {
   if (loading || !trendData || trendData.length === 0) {
     return <LoadingSkeleton variant="chart" className="h-[380px]" />;
   }
 
+  // Normalize selectedQuarter for matching (e.g. 2025-Q4 -> Q4 2025)
+  const normSelectedQuarter = selectedQuarter
+    ? (selectedQuarter.includes('-Q')
+        ? `Q${selectedQuarter.split('-Q')[1]} ${selectedQuarter.split('-Q')[0]}`
+        : selectedQuarter)
+    : '';
+
   const categories = trendData.map((d) => d.quarter);
   const marginValues = trendData.map((d) => Number((d.margin_pct || 0).toFixed(2)));
+
+  // Find index of selected quarter for markPoint
+  const selectedIndex = categories.findIndex(
+    (q) => normSelectedQuarter && q.toLowerCase() === normSelectedQuarter.toLowerCase()
+  );
 
   const option = {
     backgroundColor: 'transparent',
@@ -29,11 +46,15 @@ export default function MarginChart({ trendData, loading = false }: MarginChartP
       formatter: (params: any[]) => {
         const item = params[0];
         const val = Number(item.value);
+        const isCurrent = normSelectedQuarter && item.name.toLowerCase() === normSelectedQuarter.toLowerCase();
         return `
           <div class="font-sans">
-            <div class="text-slate-400 text-[11px] font-semibold mb-1">${item.name}</div>
+            <div class="text-slate-400 text-[11px] font-semibold mb-1 flex items-center gap-1.5">
+              ${item.name}
+              ${isCurrent ? '<span class="text-emerald-400 text-[10px] font-bold px-1.5 py-0.2 bg-emerald-950/60 rounded">Selected</span>' : ''}
+            </div>
             <div class="flex items-center space-x-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span>
+              <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block"></span>
               <span class="text-white font-bold">${item.seriesName}: ${val.toFixed(2)}%</span>
             </div>
           </div>
@@ -69,15 +90,38 @@ export default function MarginChart({ trendData, loading = false }: MarginChartP
         name: 'Margin %',
         type: 'line',
         smooth: true,
-        symbolSize: 8,
+        symbolSize: (value: any, params: any) => {
+          return params.dataIndex === selectedIndex ? 12 : 6;
+        },
         data: marginValues,
         itemStyle: {
-          color: '#10B981' // emerald-500
+          color: (params: any) => {
+            return params.dataIndex === selectedIndex ? '#059669' : '#10B981';
+          }
         },
         lineStyle: {
           width: 3,
           color: '#10B981'
         },
+        markPoint: selectedIndex >= 0 ? {
+          data: [
+            {
+              coord: [selectedIndex, marginValues[selectedIndex]],
+              symbol: 'pin',
+              symbolSize: 45,
+              label: {
+                show: true,
+                formatter: `${marginValues[selectedIndex]}%`,
+                fontSize: 10,
+                fontWeight: 'bold',
+                color: '#FFFFFF'
+              },
+              itemStyle: {
+                color: '#059669'
+              }
+            }
+          ]
+        } : undefined,
         areaStyle: {
           color: {
             type: 'linear',
@@ -121,8 +165,10 @@ export default function MarginChart({ trendData, loading = false }: MarginChartP
           option={option}
           style={{ height: '100%', width: '100%' }}
           opts={{ renderer: 'canvas' }}
+          notMerge={true}
         />
       </div>
     </div>
   );
 }
+

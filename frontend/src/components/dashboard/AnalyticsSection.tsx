@@ -15,12 +15,32 @@ interface AnalyticsSectionProps {
     material_cost: number;
     shipping_cost: number;
   }>;
+  monthlyTrendData?: Array<{
+    month: string;
+    revenue: number;
+    cost: number;
+    profit: number;
+    margin_pct: number;
+  }>;
+  categoryData?: Array<{
+    category: string;
+    cost: number;
+    revenue: number;
+    material_cost?: number;
+    shipping_cost?: number;
+  }>;
+  selectedQuarter?: string;
+  selectedRegion?: string;
   currentMetrics: Record<string, number>;
   loading?: boolean;
 }
 
 export default function AnalyticsSection({
   trendData,
+  monthlyTrendData = [],
+  categoryData = [],
+  selectedQuarter,
+  selectedRegion,
   currentMetrics,
   loading = false
 }: AnalyticsSectionProps) {
@@ -43,13 +63,23 @@ export default function AnalyticsSection({
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Chart 1: Revenue Trend */}
-        <RevenueChart trendData={trendData} loading={loading} />
+        <RevenueChart
+          trendData={trendData}
+          monthlyData={monthlyTrendData}
+          selectedQuarter={selectedQuarter}
+          loading={loading}
+        />
 
         {/* Chart 2: Margin % Trend */}
-        <MarginChart trendData={trendData} loading={loading} />
+        <MarginChart
+          trendData={trendData}
+          selectedQuarter={selectedQuarter}
+          loading={loading}
+        />
 
         {/* Chart 3: Cost Breakdown */}
         <CostChart
+          categoryData={categoryData}
           materialCost={materialCost}
           shippingCost={shippingCost}
           totalCost={totalCost}
@@ -59,3 +89,4 @@ export default function AnalyticsSection({
     </div>
   );
 }
+

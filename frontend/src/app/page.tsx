@@ -18,6 +18,8 @@ import SettingsView from '../components/views/SettingsView';
 import {
   fetchExecutiveKpis,
   fetchQuarterlyTrendData,
+  fetchMonthlyTrendData,
+  fetchCategoryBreakdown,
   fetchHealthStatus,
   fetchDatasetSummary,
   HealthResponse,
@@ -42,6 +44,8 @@ export default function MetricMindDashboardPage() {
   const [currentKpis, setCurrentKpis] = useState<Record<string, number>>({});
   const [previousKpis, setPreviousKpis] = useState<Record<string, number>>({});
   const [trendData, setTrendData] = useState<any[]>([]);
+  const [monthlyTrendData, setMonthlyTrendData] = useState<any[]>([]);
+  const [categoryData, setCategoryData] = useState<any[]>([]);
   const [healthData, setHealthData] = useState<HealthResponse | null>(null);
   const [datasetSummary, setDatasetSummary] = useState<DatasetSummaryResponse | null>(null);
   const [latestSql, setLatestSql] = useState<string>('');
@@ -62,7 +66,7 @@ export default function MetricMindDashboardPage() {
     else setPrevQuarter('2025-Q3');
   }, [selectedQuarter]);
 
-  // Load Executive KPIs and Trends dynamically from backend
+  // Load Executive KPIs, Trends, Monthly data, and Category breakdown dynamically from backend
   const loadDashboardData = useCallback(async () => {
     setLoadingKpis(true);
     setLoadingTrends(true);
@@ -103,11 +107,17 @@ export default function MetricMindDashboardPage() {
     }
 
     try {
-      // 2. Fetch Trend Data across Quarters
-      const trends = await fetchQuarterlyTrendData(selectedRegion);
+      // 2. Fetch Quarterly Trends, Monthly Trends, and Category Breakdown in Parallel
+      const [trends, monthly, categories] = await Promise.all([
+        fetchQuarterlyTrendData(selectedRegion),
+        fetchMonthlyTrendData(selectedRegion, selectedQuarter === 'All' ? undefined : selectedQuarter),
+        fetchCategoryBreakdown(selectedRegion, selectedQuarter)
+      ]);
       setTrendData(trends || []);
+      setMonthlyTrendData(monthly || []);
+      setCategoryData(categories || []);
     } catch (err) {
-      console.error('Failed to load quarterly trends:', err);
+      console.error('Failed to load chart analytics data:', err);
     } finally {
       setLoadingTrends(false);
     }
@@ -148,14 +158,14 @@ export default function MetricMindDashboardPage() {
         onSelectNav={(key) => {
           setActiveNav(key);
         }}
-        onOpenCatalog={() => setActiveNav('semantic_catalog')}
+        onOpenCatalog={() => setIsCatalogOpen(true)}
         isOpenMobile={isMobileMenuOpen}
         onCloseMobile={() => setIsMobileMenuOpen(false)}
       />
 
-      {/* MAIN CONTENT AREA */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden">
-        {/* 2. TOP BAR (Search / Filters / User) */}
+      {/* 2. MAIN CONTENT AREA */}
+      <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+        {/* TOP APP BAR */}
         <TopBar
           onSearchSubmit={handleSearchSubmit}
           selectedQuarter={selectedQuarter}
@@ -178,6 +188,8 @@ export default function MetricMindDashboardPage() {
               currentKpis={currentKpis}
               previousKpis={previousKpis}
               trendData={trendData}
+              monthlyTrendData={monthlyTrendData}
+              categoryData={categoryData}
               healthData={healthData}
               datasetSummary={datasetSummary}
               latestTransparency={latestTransparency}

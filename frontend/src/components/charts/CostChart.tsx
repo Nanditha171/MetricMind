@@ -1,31 +1,73 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import ReactECharts from 'echarts-for-react';
-import { PieChart, DollarSign } from 'lucide-react';
+import { PieChart, DollarSign, Layers } from 'lucide-react';
 import LoadingSkeleton from '../ui/LoadingSkeleton';
 import { formatMetricValue } from '../../lib/api';
 
 interface CostChartProps {
+  categoryData?: Array<{ category: string; cost: number; revenue: number; material_cost?: number; shipping_cost?: number }>;
   materialCost?: number;
   shippingCost?: number;
   totalCost?: number;
   loading?: boolean;
 }
 
+const CATEGORY_COLORS: Record<string, string> = {
+  'Data Platform': '#4F46E5', // Indigo
+  'Analytics': '#0EA5E9',     // Sky
+  'CRM': '#10B981',           // Emerald
+  'Cloud': '#F59E0B',         // Amber
+  'Security': '#EC4899',      // Pink
+  'AI': '#8B5CF6',            // Purple
+  'Support': '#64748B',       // Slate
+};
+
 export default function CostChart({
+  categoryData = [],
   materialCost = 0,
   shippingCost = 0,
   totalCost = 0,
   loading = false
 }: CostChartProps) {
+  const [viewMode, setViewMode] = useState<'category' | 'component'>('category');
+
   if (loading) {
     return <LoadingSkeleton variant="chart" className="h-[380px]" />;
   }
 
   const computedTotal = totalCost || (materialCost + shippingCost);
-  const matPct = computedTotal > 0 ? ((materialCost / computedTotal) * 100).toFixed(1) : '75.0';
-  const shipPct = computedTotal > 0 ? ((shippingCost / computedTotal) * 100).toFixed(1) : '25.0';
+
+  // Prepare chart series data based on active view mode
+  let chartData: Array<{ name: string; value: number; itemStyle: { color: string } }> = [];
+
+  if (viewMode === 'category' && categoryData && categoryData.length > 0) {
+    chartData = categoryData.map((d, idx) => {
+      const catName = d.category || 'Other';
+      const color = CATEGORY_COLORS[catName] || [
+        '#4F46E5', '#0EA5E9', '#10B981', '#F59E0B', '#EC4899', '#8B5CF6', '#14B8A6'
+      ][idx % 7];
+      return {
+        name: catName,
+        value: Math.round(d.cost || 0),
+        itemStyle: { color }
+      };
+    });
+  } else {
+    chartData = [
+      {
+        value: Math.round(materialCost),
+        name: 'Material Cost (75%)',
+        itemStyle: { color: '#3B82F6' } // Blue
+      },
+      {
+        value: Math.round(shippingCost),
+        name: 'Shipping Cost (25%)',
+        itemStyle: { color: '#F59E0B' } // Amber
+      }
+    ];
+  }
 
   const option = {
     backgroundColor: 'transparent',
@@ -48,47 +90,38 @@ export default function CostChart({
     },
     legend: {
       orient: 'horizontal',
-      bottom: '5%',
+      bottom: '2%',
       left: 'center',
-      textStyle: { color: '#64748B', fontSize: 11, fontWeight: 500 },
-      itemWidth: 10,
-      itemHeight: 10
+      textStyle: { color: '#64748B', fontSize: 10, fontWeight: 500 },
+      itemWidth: 8,
+      itemHeight: 8
     },
     series: [
       {
-        name: 'Cost Breakdown',
+        name: viewMode === 'category' ? 'Category Cost' : 'Cost Breakdown',
         type: 'pie',
-        radius: ['52%', '78%'],
-        center: ['50%', '45%'],
+        radius: ['48%', '74%'],
+        center: ['50%', '44%'],
         avoidLabelOverlap: false,
         itemStyle: {
-          borderRadius: 8,
+          borderRadius: 6,
           borderColor: '#FFFFFF',
-          borderWidth: 3
+          borderWidth: 2
         },
         label: {
           show: false
         },
         emphasis: {
+          scale: true,
+          scaleSize: 6,
           label: {
             show: true,
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: 'bold',
             color: '#0F172A'
           }
         },
-        data: [
-          {
-            value: Math.round(materialCost),
-            name: 'Material Cost (75%)',
-            itemStyle: { color: '#3B82F6' } // Blue
-          },
-          {
-            value: Math.round(shippingCost),
-            name: 'Shipping Cost (25%)',
-            itemStyle: { color: '#F59E0B' } // Amber
-          }
-        ]
+        data: chartData
       }
     ]
   };
@@ -103,15 +136,34 @@ export default function CostChart({
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-800">Cost Breakdown</h3>
-            <p className="text-[11px] text-slate-500">Material vs. Shipping distribution</p>
+            <p className="text-[11px] text-slate-500">
+              {viewMode === 'category' ? 'Cost by Product Category' : 'Material vs Shipping'}
+            </p>
           </div>
         </div>
 
-        <div className="text-right">
-          <span className="text-[10px] text-slate-400 font-medium block">Total Cost</span>
-          <span className="text-xs font-extrabold text-slate-800 font-sans">
-            {formatMetricValue(computedTotal, 'currency')}
-          </span>
+        {/* View Toggle */}
+        <div className="flex bg-slate-100 p-0.5 rounded-lg text-[10px] font-semibold">
+          <button
+            onClick={() => setViewMode('category')}
+            className={`px-2 py-1 rounded-md transition-all ${
+              viewMode === 'category'
+                ? 'bg-white text-amber-700 shadow-sm'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            By Category
+          </button>
+          <button
+            onClick={() => setViewMode('component')}
+            className={`px-2 py-1 rounded-md transition-all ${
+              viewMode === 'component'
+                ? 'bg-white text-amber-700 shadow-sm'
+                : 'text-slate-500 hover:text-slate-800'
+            }`}
+          >
+            Components
+          </button>
         </div>
       </div>
 
@@ -121,10 +173,11 @@ export default function CostChart({
           option={option}
           style={{ height: '100%', width: '100%' }}
           opts={{ renderer: 'canvas' }}
+          notMerge={true}
         />
         <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none pb-8">
-          <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Total</span>
-          <span className="text-base font-extrabold text-slate-800 font-sans">
+          <span className="text-[9px] font-semibold uppercase tracking-wider text-slate-400">Total Cost</span>
+          <span className="text-sm font-extrabold text-slate-800 font-sans">
             {formatMetricValue(computedTotal, 'currency')}
           </span>
         </div>
@@ -132,3 +185,4 @@ export default function CostChart({
     </div>
   );
 }
+

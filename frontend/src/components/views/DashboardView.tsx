@@ -16,6 +16,8 @@ interface DashboardViewProps {
   currentKpis: Record<string, number>;
   previousKpis: Record<string, number>;
   trendData: any[];
+  monthlyTrendData?: any[];
+  categoryData?: any[];
   healthData: HealthResponse | null;
   datasetSummary: DatasetSummaryResponse | null;
   latestTransparency: any;
@@ -33,6 +35,8 @@ export default function DashboardView({
   currentKpis,
   previousKpis,
   trendData,
+  monthlyTrendData = [],
+  categoryData = [],
   healthData,
   datasetSummary,
   latestTransparency,
@@ -68,6 +72,10 @@ export default function DashboardView({
       <section aria-label="Analytics & Trends">
         <AnalyticsSection
           trendData={trendData}
+          monthlyTrendData={monthlyTrendData}
+          categoryData={categoryData}
+          selectedQuarter={selectedQuarter}
+          selectedRegion={selectedRegion}
           currentMetrics={currentKpis}
           loading={loadingTrends}
         />
