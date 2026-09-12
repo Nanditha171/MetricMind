@@ -68,7 +68,16 @@ export default function DashboardView({
         />
       </section>
 
-      {/* 3. ANALYTICS CHARTS (Revenue Trend | Margin % Trend | Cost Breakdown) */}
+      {/* 3. AI ANALYTICS ASSISTANT & ROOT-CAUSE ANALYSIS */}
+      <section aria-label="AI Analytics Assistant">
+        <AIAnalyticsAssistant
+          externalPrompt={externalPrompt}
+          onClearPrompt={onClearPrompt}
+          onUpdateTransparency={onUpdateTransparency}
+        />
+      </section>
+
+      {/* 4. ANALYTICS CHARTS (Revenue Trend | Margin % Trend | Cost Breakdown) */}
       <section aria-label="Analytics & Trends">
         <AnalyticsSection
           trendData={trendData}
@@ -78,15 +87,6 @@ export default function DashboardView({
           selectedRegion={selectedRegion}
           currentMetrics={currentKpis}
           loading={loadingTrends}
-        />
-      </section>
-
-      {/* 4. AI ANALYTICS ASSISTANT & ROOT-CAUSE ANALYSIS */}
-      <section aria-label="AI Analytics Assistant">
-        <AIAnalyticsAssistant
-          externalPrompt={externalPrompt}
-          onClearPrompt={onClearPrompt}
-          onUpdateTransparency={onUpdateTransparency}
         />
       </section>
 

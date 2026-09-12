@@ -225,7 +225,18 @@ export default function MetricMindDashboardPage() {
           )}
 
           {/* VIEW 5: Reports */}
-          {activeNav === 'reports' && <ReportsView />}
+          {activeNav === 'reports' && (
+            <ReportsView
+              selectedRegion={selectedRegion}
+              selectedQuarter={selectedQuarter}
+              prevQuarter={prevQuarter}
+              currentKpis={currentKpis}
+              previousKpis={previousKpis}
+              loadingKpis={loadingKpis}
+              isRefreshing={isRefreshing}
+              onRefresh={handleRefresh}
+            />
+          )}
 
           {/* VIEW 6: Data Health */}
           {activeNav === 'data_health' && <DataHealthView />}
