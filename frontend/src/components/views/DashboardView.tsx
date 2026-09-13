@@ -7,6 +7,7 @@ import AnalyticsSection from '../dashboard/AnalyticsSection';
 import AIAnalyticsAssistant from '../dashboard/AIAnalyticsAssistant';
 import QueryTransparency from '../dashboard/QueryTransparency';
 import GovernanceStatus from '../dashboard/GovernanceStatus';
+import DimensionCoverage from '../dashboard/DimensionCoverage';
 import { HealthResponse, DatasetSummaryResponse } from '../../lib/api';
 
 interface DashboardViewProps {
@@ -90,12 +91,17 @@ export default function DashboardView({
         />
       </section>
 
-      {/* 5. QUERY TRANSPARENCY INSPECTOR */}
+      {/* 5. DBT ANALYTICAL MODELS & DIMENSION COVERAGE */}
+      <section aria-label="DBT Analytical Models & Dimension Coverage">
+        <DimensionCoverage datasetSummary={datasetSummary} />
+      </section>
+
+      {/* 6. QUERY TRANSPARENCY INSPECTOR */}
       <section aria-label="Query Transparency">
         <QueryTransparency transparency={latestTransparency} />
       </section>
 
-      {/* 6. SYSTEM & GOVERNANCE HEALTH */}
+      {/* 7. SYSTEM & GOVERNANCE HEALTH */}
       <section aria-label="Governance & System Health" className="pb-8">
         <GovernanceStatus
           healthData={healthData}
